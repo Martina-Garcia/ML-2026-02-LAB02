@@ -4,7 +4,7 @@
 Uso (con el entorno conda activado):
 
     python main.py olivetti       # PCA y LDA sobre Olivetti; Fisherfaces avisa
-    python main.py lfw            # TODO(alumno): mismo protocolo cuando exista el cargador
+    python main.py lfw            #mismo protocolo cuando exista el cargador
     python main.py experimentos   # Olivetti e intento de LFW
 """
 

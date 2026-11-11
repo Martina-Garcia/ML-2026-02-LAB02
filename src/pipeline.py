@@ -91,7 +91,7 @@ class PipelineExperimentos:
                     fisher_omitido = True
                 continue
 
-            if extractor.dimension == DIMENSION_MAPAS and extractor.nombre in {"pca", "lda"}:
+            if extractor.dimension == DIMENSION_MAPAS and extractor.nombre in {"pca", "lda","fisherfaces"}:
                 proyecciones_mapa[(extractor.nombre, extractor.dimension)] = (
                     Z_train,
                     particion.y_train,

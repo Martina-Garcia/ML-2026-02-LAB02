@@ -6,12 +6,12 @@ import numpy as np
 
 from src.embeddings.base import ExtractorEmbedding
 from src.excepciones import EtapaPendienteAlumno
+from src.embeddings.lda import ExtractorLDA
+from src.embeddings.pca import ExtractorPCA
 
 
 class ExtractorFisherfaces(ExtractorEmbedding):
     """Proyección z = W_LDAᵀ W_PCAᵀ (x − μ), ajustada solo con TRAIN.
-
-    TODO(alumno): implementar ``fit`` y ``transform``.
 
     Orden obligatorio:
 
@@ -35,19 +35,33 @@ class ExtractorFisherfaces(ExtractorEmbedding):
             )
         self.d_pca = int(d_pca)
         self.d_lda = int(d_lda)
+        self.pca = ExtractorPCA(n_components=self.d_pca)
+        self.lda = ExtractorLDA(n_components=self.d_lda)
 
     @property
     def dimension(self) -> int:
         return self.d_lda
 
     def fit(self, X: np.ndarray, y: np.ndarray | None = None) -> ExtractorFisherfaces:
-        del X, y
-        raise self._pendiente()
+        if y is None:
+            raise ValueError("Fisherfaces necesita y_train: LDA usa las identidades.")
+        maximo = min(int(np.unique(y).size) - 1, self.d_pca)
+        if self.d_lda > maximo:
+            raise ValueError(
+                 f"d_lda={self.d_lda} supera min(C-1, d_pca)={maximo}."
+            )
+         #1) PCA solo con TRAIN (aqui se estima mu y W_PCA)
+        Z_pca =self.pca.fit(X).transform(X)
+        # 2) LDA sobre el PCA de TRAIN, usando y_train (W_LDA).
+        self.lda.fit(Z_pca,y)
+        return self
+
 
     def transform(self, X: np.ndarray) -> np.ndarray:
-        del X
-        raise self._pendiente()
-
+        # z = W_LDAᵀ W_PCAᵀ (x − μ): ambas proyecciones, sin reajustar.
+        Z = self.lda.transform(self.pca.transform(X))
+        return self.comprobar(Z, X.shape[0])
+    
     def _pendiente(self) -> EtapaPendienteAlumno:
         return EtapaPendienteAlumno(
             "embeddings.fisherfaces.ExtractorFisherfaces",
