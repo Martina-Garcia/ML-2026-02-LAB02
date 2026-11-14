@@ -47,8 +47,8 @@ class ServicioReconocimiento:
         modelo = bundle["clasificador"]
         probabilidad = np.asarray(modelo.predict_proba(Z)[0], dtype=float)
         clases = np.asarray(modelo.classes_)
-        ganador = int(np.argmax(probabilidad))
-        predicha = int(clases[ganador])
+        predicha = int(modelo.predict(Z)[0])
+        ganador = int(np.flatnonzero(clases == predicha)[0])
         real = int(self.particion.y_test[indice])
         orden = np.argsort(probabilidad)[::-1][:5]
         top = [

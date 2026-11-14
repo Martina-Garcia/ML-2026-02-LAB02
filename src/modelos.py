@@ -18,6 +18,7 @@ class ConjuntoRostros:
     nombres_identidades: list[str]
     alto: int
     ancho: int
+    ids_originales: list[int] = field(default_factory=list)
 
     @property
     def n_clases(self) -> int:

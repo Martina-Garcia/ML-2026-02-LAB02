@@ -50,6 +50,7 @@ class CargadorLFW(CargadorRostros):
             nombres_identidades=nombres,
             alto=alto,
             ancho=ancho,
+            ids_originales=[int(i) for i in ids],
         )
         validar_conjunto(conjunto)
         print(

@@ -4,10 +4,13 @@ channels:
 dependencies:
   - python=3.11
   - numpy
-  - pandas
+  - pandas=3.0.6
   - matplotlib
-  - scikit-learn
+  - scikit-learn=1.9.1
   - streamlit
   - python-dotenv
-  - umap-learn
+  - umap-learn=0.6.0
   - joblib
+  - jupyterlab
+  - nbclient
+  - ipykernel

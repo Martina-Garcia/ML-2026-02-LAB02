@@ -106,6 +106,8 @@ class Visualizador:
     ) -> Path:
         """Mapa 2D exploratorio de Z_train. No se usa para calcular accuracy."""
         coordenadas, detalle = self._proyectar_2d(Z, metodo)
+        np.savez(self.directorio / f"coordenadas_{metodo}_{dataset}_{embedding}_d{d}.npz",
+                 coordenadas=coordenadas, identidades=y)
         fig, ax = plt.subplots(figsize=(7.2, 5.6))
         dispersion = ax.scatter(
             coordenadas[:, 0],

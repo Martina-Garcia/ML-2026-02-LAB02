@@ -1,6 +1,6 @@
 # Laboratorio: embeddings faciales lineales
 
-Pipeline académico para comparar **PCA** y **LDA** en el reconocimiento de rostros, y dejar listo el lugar donde el alumno completa **Fisherfaces** y el experimento con **LFW**.
+Pipeline académico para comparar **PCA**, **LDA** y **Fisherfaces** en el reconocimiento de rostros sobre **Olivetti** y **LFW**.
 
 La pregunta de trabajo es si una fotografía nueva corresponde a una identidad ya conocida. El píxel no se compara directo: primero se obtiene un embedding lineal y después un clasificador elige la identidad.
 
@@ -15,7 +15,7 @@ No use `pip install` ni `requirements.txt`. El entorno oficial es `environment.y
 
 ```bash
 conda env create -f environment.yml
-conda activate lab-embeddings-faciales
+conda activate lab02-ml-2026-2
 ```
 
 Para recrearlo:
@@ -35,17 +35,19 @@ cp .env.example .env
 Desde la raíz del repositorio, con el entorno activado:
 
 ```bash
-python main.py olivetti       # PCA y LDA; guarda tabla, figuras y modelos
-python main.py lfw            # mismo protocolo sobre LFW
-python main.py experimentos   # Olivetti e intento de LFW
-streamlit run app.py          # rostros de prueba con PCA o LDA
+python main.py olivetti
+python main.py lfw
+python main.py experimentos
+jupyter lab
+streamlit run app.py
+python -m unittest discover -s tests -v
 ```
 
-La primera ejecución descarga Olivetti en `data/cache/`. TRAIN aprende la media, las direcciones y el clasificador. TEST solo pasa por `transform` y `predict`.
+La primera ejecución descarga los datasets en `data/cache/`. TRAIN aprende la media, las direcciones y el clasificador. TEST solo pasa por `transform` y `predict`.
 
 Salida esperada al cargar Olivetti: `X (400, 4096)`, train `(300, 4096)`, test `(100, 4096)`.
 
-## Qué está implementado y qué debe completar
+## Módulos implementados
 
 | Módulo | Estado | Qué hace |
 | --- | --- | --- |
@@ -56,15 +58,15 @@ Salida esperada al cargar Olivetti: `X (400, 4096)`, train `(300, 4096)`, test `
 | `src/clasificadores/` | Listo | SVM lineal, k-NN (k=3) y árbol (`max_depth=8`) |
 | `src/evaluacion/` | Listo | Accuracy, macro-F1, confusión, curva PCA, t-SNE y UMAP |
 | `src/interfaz/` y `app.py` | Listo | Foto de prueba, acierto y probabilidad |
-| `src/embeddings/fisherfaces.py` | Listo(alumno) | PCA y después LDA, ambos ajustados en TRAIN |
-| `src/datos/lfw.py` | Listo(alumno) | Hasta 50 identidades con al menos 20 fotos |
+| `src/embeddings/fisherfaces.py` | Listo | PCA y después LDA, ambos ajustados en TRAIN |
+| `src/datos/lfw.py` | Listo | Hasta 50 identidades con al menos 20 fotos |
 
-Si ejecuta una etapa pendiente, el programa imprime una pista y **no falla en silencio**. Cuando Fisherfaces deje de lanzar `EtapaPendienteAlumno`, el mismo bucle lo evalúa con SVM, k-NN y árbol. Cuando `CargadorLFW.cargar` devuelva un `ConjuntoRostros`, `python main.py lfw` reutiliza ese protocolo.
+El protocolo compara las tres representaciones con los tres clasificadores en dimensiones 10, 20 y 30: 27 configuraciones por dataset y 54 en total. El notebook `Laboratorio_02_Analisis_Completo.ipynb` contiene tablas, mapas, confusiones, fotografías de error y análisis de los resultados. Se abre desde la raíz del repositorio con el entorno conda activado. Las salidas guardadas permiten revisarlo directamente; para regenerarlas se ejecutan todas sus celdas en orden.
 
 ## Protocolo
 
 - Semilla `42` y `test_size=0.25`, con `stratify=y`.
-- Dimensiones informadas: `d = 10, 20, 30`. LDA queda acotada a `C − 1`.
+- Dimensiones informadas: `d = 10, 20, 30`. LDA queda acotada a `C − 1`. Fisherfaces usa `d_pca=d_lda=d`, sin seleccionar hiperparámetros con TEST.
 - Clasificadores fijos, todos con `predict_proba`:
   - SVM: `kernel=linear`, `C=1.0`, `probability=True`. La clase predicha sale del margen; la probabilidad de la interfaz es el escalado de Platt. scikit-learn 1.9 depreca ese argumento, y la fábrica silencia solo ese aviso: el reemplazo `CalibratedClassifierCV` cambia la identidad elegida.
   - k-NN: 3 vecinos; la probabilidad es la fracción de votos
@@ -76,7 +78,7 @@ Si ejecuta una etapa pendiente, el programa imprime una pista y **no falla en si
 
 ## Interfaz
 
-`streamlit run app.py` muestra una fotografía del conjunto de prueba de Olivetti. En la barra se elige PCA o LDA, el clasificador y `d`. La pantalla indica si la identidad predicha coincide con la real y con qué probabilidad.
+`streamlit run app.py` muestra una fotografía del conjunto de prueba de Olivetti. En la barra se elige PCA, LDA o Fisherfaces, el clasificador y `d`. La pantalla indica si la identidad predicha coincide con la real y con qué probabilidad.
 
 No cargue fotografías personales. Los rostros son datos biométricos.
 
@@ -94,9 +96,9 @@ pdflatex lab-embeddings-faciales.tex
 
 `PipelineExperimentos` coordina:
 
-1. `CargadorOlivetti` (o `CargadorLFW`, cuando el alumno lo complete).
+1. `CargadorOlivetti` o `CargadorLFW`.
 2. `DivisorEstratificado`, que deja cada identidad de test también en train.
-3. `FabricaExtractores`: PCA, LDA y el gancho de Fisherfaces.
+3. `FabricaExtractores`: PCA, LDA y Fisherfaces.
 4. `FabricaClasificadores` y `Evaluador` sobre el embedding, nunca sobre los píxeles de test para ajustar.
 5. `Visualizador` para la curva de varianza, las eigenfaces, las confusiones y los mapas.
 6. `ServicioReconocimiento`, que lee el mismo artefacto que guardó el orquestador.
@@ -115,11 +117,14 @@ main.py                 Experimentos, tabla y figuras
 app.py                  Interfaz Streamlit
 environment.yml         Entorno conda
 src/pipeline.py         PipelineExperimentos
-src/datos/              Olivetti listo; LFW pendiente
-src/embeddings/         PCA y LDA listos; Fisherfaces pendiente
+src/datos/              Olivetti y LFW
+src/embeddings/         PCA, LDA y Fisherfaces
 src/clasificadores/     SVM, k-NN y árbol
 src/evaluacion/         Métricas y figuras
 src/interfaz/           Predicción sobre el conjunto de prueba
+src/analisis.py         Tablas y evidencia del notebook
+tests/                  Pruebas del laboratorio
+Laboratorio_02_Analisis_Completo.ipynb
 data/                   Caché, modelos y CSV (generados)
 figuras/                Curva, eigenfaces, mapas y confusiones
 docs/                   Presentación Beamer (solo copia local)

@@ -100,9 +100,9 @@ class PipelineExperimentos:
                 self._evaluar_clasificadores(conjunto, extractor, particion, Z_train, Z_test)
             )
 
+        self._guardar_csv(resultados, conjunto.nombre)
         self._figuras_pca(conjunto, particion)
         self._mapas(conjunto.nombre, proyecciones_mapa)
-        self._guardar_csv(resultados, conjunto.nombre)
         self._imprimir(resultados)
         return resultados
 
