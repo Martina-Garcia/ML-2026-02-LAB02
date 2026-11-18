@@ -1,3 +1,10 @@
 streamlit
 pandas
+numpy
 sys
+argparse
+joblib
+os
+platform
+matplotlib
+sklearn
