@@ -1,10 +1,8 @@
 streamlit
-pandas
 numpy
-sys
-argparse
-joblib
-os
-platform
+pandas==3.0.6
 matplotlib
-sklearn
+scikit-learn==1.9.1
+python-dotenv
+umap-learn==0.6.0
+joblib
